@@ -1,0 +1,13 @@
+[project]
+name = "grounding"
+version = "1.0.0"
+description = "Local-first digital-detox agent"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+  "langgraph>=0.2",
+  "streamlit>=1.38",
+  "fpdf2>=2.7",
+  "segno>=1.6",
+  "mcp>=1.2,<2",
+  "cryptography<46",
+]

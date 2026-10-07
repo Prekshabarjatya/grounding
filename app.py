@@ -9,7 +9,7 @@ import streamlit as st
 import agents, mobile, report
 import grounding as g
 
-st.set_page_config(page_title="Grounding", page_icon="🌱", layout="centered")
+st.set_page_config(page_title="Grounding", page_icon="🌱", layout="wide")
 
 
 @st.cache_resource
@@ -30,11 +30,12 @@ st.markdown("""
 html,body,[class*="st-"],p,li,label,button,input,textarea{font-family:"Instrument Sans",system-ui,sans-serif}
 .stApp{background:radial-gradient(1200px 600px at 85% -10%,#DCE6D2 0%,transparent 60%),
   radial-gradient(900px 500px at -10% 110%,#EBDDC8 0%,transparent 55%),var(--paper)}
-.block-container{padding-top:3.5rem;max-width:760px}
+.block-container{padding:4.5rem clamp(1.2rem,5vw,5rem) 4rem!important;max-width:1320px!important}
+.stApp{min-height:100vh}
 header[data-testid="stHeader"]{background:transparent}
 h1,h2,h3,.serif{font-family:"Fraunces",Georgia,serif!important;font-weight:400!important;letter-spacing:-.02em;color:var(--ink)}
 .eyebrow{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);font-weight:600}
-.hero{font-family:"Fraunces",serif;font-size:clamp(2.6rem,7vw,4.2rem);line-height:1;margin:.35rem 0 .6rem;color:var(--ink);font-weight:300}
+.hero{font-family:"Fraunces",serif;font-size:clamp(3rem,8.5vw,7.5rem);line-height:1;margin:.35rem 0 .6rem;color:var(--ink);font-weight:300}
 .hero em{color:var(--moss);font-style:italic}
 .sub{color:var(--mute);font-size:.95rem;margin-bottom:1.6rem}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--moss);margin-right:8px;
@@ -44,7 +45,7 @@ h1,h2,h3,.serif{font-family:"Fraunces",Georgia,serif!important;font-weight:400!i
 [data-testid="stTab"]{border-radius:999px!important;padding:7px 16px!important;font-size:.86rem;color:var(--mute);border:0!important;cursor:pointer}
 [data-testid="stTab"][aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px #0000001a}
 [data-testid="stTab"]:after,[data-testid="stTab"]:before{display:none!important}
-.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px 28px;margin:14px 0;
+.card{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:34px 36px;min-height:250px;margin:14px 0;
   box-shadow:0 1px 0 #fff inset,0 18px 40px -28px #1F2A2040}
 .ringwrap{display:flex;align-items:center;gap:28px;flex-wrap:wrap}
 .ringnum,.stMarkdown .ringnum{font-family:"Fraunces",serif;font-size:2.6rem;line-height:1;color:var(--ink)}
@@ -74,7 +75,7 @@ def ring(mins, limit):
     pct = min(mins / limit, 1)
     color = "#B5643C" if pct >= 1 else "#3E6B48"
     c = 2 * 3.14159 * 52
-    return (f"<svg width='132' height='132' viewBox='0 0 132 132' role='img' aria-label='{mins} of {limit} minutes'>"
+    return (f"<svg width='170' height='170' viewBox='0 0 132 132' role='img' aria-label='{mins} of {limit} minutes'>"
             f"<circle cx='66' cy='66' r='52' fill='none' stroke='#1F2A2012' stroke-width='9'/>"
             f"<circle cx='66' cy='66' r='52' fill='none' stroke='{color}' stroke-width='9' stroke-linecap='round' "
             f"stroke-dasharray='{c * pct:.1f} {c:.1f}' transform='rotate(-90 66 66)'/>"
@@ -106,7 +107,8 @@ with status:
     left = max(s["threshold"] - s["screen_minutes"], 0)
     mood = "Time to step away." if s["fatigued"] else ("Fresh and focused." if s["screen_minutes"] < 30
                                                         else f"{left} minutes until your next nudge.")
-    st.markdown(f"""<div class='card'><div class='ringwrap'>{ring(s['screen_minutes'], s['threshold'])}
+    c_left, c_right = st.columns([1, 1.25], gap="large")
+    c_left.markdown(f"""<div class='card'><div class='ringwrap'>{ring(s['screen_minutes'], s['threshold'])}
       <div><div class='eyebrow'>On screen since your last break</div>
       <div class='ringnum'>{s['screen_minutes']}<small>min</small></div>
       <div class='state'>{mood}</div>
@@ -116,8 +118,8 @@ with status:
     body = (f"<p class='quote'>{html.escape(m['text'])}</p>" + ("<div class='done' style='margin-top:12px'>✓ completed</div>"
                                                                if m["done"] else "")) if m else \
         "<p class='quote' style='color:#7A7F6E'>No mission yet. Ask for one when you're ready.</p>"
-    st.markdown(f"<div class='card'><div class='eyebrow'>Your mission</div>{body}</div>", unsafe_allow_html=True)
-    if st.button("Give me a new mission", type="primary"):
+    c_right.markdown(f"<div class='card'><div class='eyebrow'>Your mission</div>{body}</div>", unsafe_allow_html=True)
+    if c_right.button("Give me a new mission", type="primary"):
         with st.spinner("Finding something to do outside…"):
             try:
                 agents.run_mission(force=True)
@@ -137,11 +139,11 @@ with journal:
     if not rows:
         st.markdown("<div class='empty'><div class='serif'>Nothing here yet.</div>"
                     "Your first moment outside will appear here as a polaroid.</div>", unsafe_allow_html=True)
-    cols = st.columns(2, gap="large")
+    cols = st.columns(3, gap="large")
     for i, r in enumerate(rows):
         photo = g.HOME / "photos" / r["photo"]
         img = f"<img src='data:image/jpeg;base64,{thumb(photo)}' alt='Photo from {r['at']}'>" if photo.exists() else ""
-        cols[i % 2].markdown(
+        cols[i % 3].markdown(
             f"<div class='polaroid tilt-{i % 2}'>{img}<div class='when'>"
             f"{datetime.fromisoformat(r['at']):%a %d %b · %H:%M}</div><p>{html.escape(r['entry'])}</p></div>",
             unsafe_allow_html=True)
